@@ -77,7 +77,7 @@ int vni_configure(const char *dev,
     return callback(&ifr, &sai, socket_fd, callback_arguments);
 }
 
-int set_vni_flags(const char *dev, uint32_t flag) {
+int set_vni_flags(const char *dev, int flag) {
     return vni_configure(dev, tun_set_flags_callback, (uint8_t *) flag);
 }
 
