@@ -16,6 +16,7 @@ int get_errno();
 char *get_strerror_r(int n);
 int vni_alloc(short mode, char *dev);
 int vni_configure(const char *dev, int callback(struct ifreq *ifr, struct sockaddr_in *sai, int socket_fd, uint8_t *callback_arguments), uint8_t *callback_arguments);
+int set_vni_flags(const char *dev, uint32_t flag);
 int tun_init(const char *dev);
 int set_mtu(const char *dev, int mtu);
 int set_vni_address(const char *dev, uint32_t address);

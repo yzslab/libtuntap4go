@@ -1,9 +1,15 @@
 #include "tuntap4go.h"
 
-static int tun_init_callback(struct ifreq *ifr, struct sockaddr_in *sai, int socket_fd, uint8_t *callback_arguments);
+static int
+tun_set_flags_callback(struct ifreq *ifr, struct sockaddr_in *sai, int socket_fd, uint8_t *callback_arguments);
+
 static int set_mtu_callback(struct ifreq *ifr, struct sockaddr_in *sai, int socket_fd, uint8_t *callback_arguments);
-static int set_vni_address_callback(struct ifreq *ifr, struct sockaddr_in *sai, int socket_fd, uint8_t *callback_arguments);
-static int set_tun_destination_address_callback(struct ifreq *ifr, struct sockaddr_in *sai, int socket_fd, uint8_t *callback_arguments);
+
+static int
+set_vni_address_callback(struct ifreq *ifr, struct sockaddr_in *sai, int socket_fd, uint8_t *callback_arguments);
+
+static int set_tun_destination_address_callback(struct ifreq *ifr, struct sockaddr_in *sai, int socket_fd,
+                                                uint8_t *callback_arguments);
 
 int get_errno() {
     return errno;
@@ -71,8 +77,12 @@ int vni_configure(const char *dev,
     return callback(&ifr, &sai, socket_fd, callback_arguments);
 }
 
+int set_vni_flags(const char *dev, uint32_t flag) {
+    return vni_configure(dev, tun_set_flags_callback, (uint8_t *) flag);
+}
+
 int tun_init(const char *dev) {
-    return vni_configure(dev, tun_init_callback, (uint8_t *) (IFF_UP | IFF_POINTOPOINT | IFF_RUNNING | IFF_NOARP | IFF_MULTICAST));
+    return set_vni_flags(dev, (uint8_t *) (IFF_UP | IFF_POINTOPOINT | IFF_RUNNING | IFF_NOARP | IFF_MULTICAST));
 }
 
 int set_mtu(const char *dev, int mtu) {
@@ -103,7 +113,8 @@ int set_tun_destination_address_by_ascii(const char *dev, const char *address) {
     return set_tun_destination_address(dev, in_val.s_addr);
 }
 
-static int tun_init_callback(struct ifreq *ifr, struct sockaddr_in *sai, int socket_fd, uint8_t *callback_arguments) {
+static int
+tun_set_flags_callback(struct ifreq *ifr, struct sockaddr_in *sai, int socket_fd, uint8_t *callback_arguments) {
     int flag = (int) callback_arguments;
     ifr->ifr_flags = flag;
     return ioctl(socket_fd, SIOCSIFFLAGS, ifr);
@@ -114,14 +125,16 @@ static int set_mtu_callback(struct ifreq *ifr, struct sockaddr_in *sai, int sock
     return ioctl(socket_fd, SIOCSIFMTU, ifr);
 }
 
-static int set_vni_address_callback(struct ifreq *ifr, struct sockaddr_in *sai, int socket_fd, uint8_t *callback_arguments) {
+static int
+set_vni_address_callback(struct ifreq *ifr, struct sockaddr_in *sai, int socket_fd, uint8_t *callback_arguments) {
     uint32_t address = (uint32_t) callback_arguments;
     sai->sin_addr.s_addr = address;
     memcpy(&ifr->ifr_addr, sai, sizeof(struct sockaddr));
     return ioctl(socket_fd, SIOCSIFADDR, ifr);
 }
 
-static int set_tun_destination_address_callback(struct ifreq *ifr, struct sockaddr_in *sai, int socket_fd, uint8_t *callback_arguments) {
+static int set_tun_destination_address_callback(struct ifreq *ifr, struct sockaddr_in *sai, int socket_fd,
+                                                uint8_t *callback_arguments) {
     uint32_t address = (uint32_t) callback_arguments;
     sai->sin_addr.s_addr = address;
     memcpy(&ifr->ifr_addr, sai, sizeof(struct sockaddr));
