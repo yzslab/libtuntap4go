@@ -19,8 +19,8 @@ int vni_configure(const char *dev, int callback(struct ifreq *ifr, struct sockad
 int set_vni_flags(const char *dev, int flag);
 int tun_init(const char *dev);
 int set_mtu(const char *dev, int mtu);
-int set_vni_address(const char *dev, uint32_t address);
-int set_vni_address_by_ascii(const char *dev, const char *address);
+int set_vni_address(const char *dev, uint32_t address, uint32_t netmask);
+int set_vni_address_by_ascii(const char *dev, const char *address, const char *netmask);
 int set_tun_destination_address(const char *dev, uint32_t address);
 int set_tun_destination_address_by_ascii(const char *dev, const char *address);
 

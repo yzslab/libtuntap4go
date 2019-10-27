@@ -89,16 +89,24 @@ int set_mtu(const char *dev, int mtu) {
     return vni_configure(dev, set_mtu_callback, (uint8_t *) mtu);
 }
 
-int set_vni_address(const char *dev, uint32_t address) {
-    return vni_configure(dev, set_vni_address_callback, (uint8_t *) address);
+int set_vni_address(const char *dev, uint32_t address, uint32_t netmask) {
+    uint32_t address_and_netmask[2];
+    address_and_netmask[0] = address;
+    address_and_netmask[1] = netmask;
+
+    return vni_configure(dev, set_vni_address_callback, (uint8_t *) address_and_netmask);
 }
 
-int set_vni_address_by_ascii(const char *dev, const char *address) {
-    struct in_addr in_val;
-    if (!inet_aton(address, &in_val)) {
+int set_vni_address_by_ascii(const char *dev, const char *address, const char *netmask) {
+    struct in_addr ip, mask;
+    if (!inet_aton(address, &ip)) {
         return -1;
     }
-    return set_vni_address(dev, in_val.s_addr);
+    if (!inet_aton(netmask, &mask)) {
+        return -1;
+    }
+
+    return set_vni_address(dev, ip.s_addr, mask.s_addr);
 }
 
 int set_tun_destination_address(const char *dev, uint32_t address) {
@@ -127,10 +135,21 @@ static int set_mtu_callback(struct ifreq *ifr, struct sockaddr_in *sai, int sock
 
 static int
 set_vni_address_callback(struct ifreq *ifr, struct sockaddr_in *sai, int socket_fd, uint8_t *callback_arguments) {
-    uint32_t address = (uint32_t) callback_arguments;
-    sai->sin_addr.s_addr = address;
+    uint32_t *address_and_netmask = (uint32_t *) callback_arguments;
     memcpy(&ifr->ifr_addr, sai, sizeof(struct sockaddr));
-    return ioctl(socket_fd, SIOCSIFADDR, ifr);
+
+    sai = (struct sockaddr_in *) &ifr->ifr_addr;
+
+    sai->sin_addr.s_addr = address_and_netmask[0];
+    if (ioctl(socket_fd, SIOCSIFADDR, ifr) < 0) {
+        return -1;
+    }
+
+    if (address_and_netmask[1]) {
+        sai->sin_addr.s_addr = address_and_netmask[1];
+        return ioctl(socket_fd, SIOCSIFNETMASK, ifr);
+    }
+    return 0;
 }
 
 static int set_tun_destination_address_callback(struct ifreq *ifr, struct sockaddr_in *sai, int socket_fd,
