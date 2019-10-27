@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.0)
 project(tuntap4go C)
 
 set(CMAKE_C_STANDARD 11)

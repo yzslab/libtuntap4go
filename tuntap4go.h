@@ -1,5 +1,7 @@
 #ifndef LIBTUNTAP4GO_LIBRARY_H
 #define LIBTUNTAP4GO_LIBRARY_H
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <memory.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
